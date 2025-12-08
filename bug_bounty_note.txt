@@ -1,0 +1,67 @@
+First lesson: preparation really matter
+  scoped the target. figured out what in-scope and out of scope 
+Second lesson: tool are great but they don't replace understanding
+  think like a user and then a developer when using the application 
+  think of where this application might screw up
+Third lesson: RECON 
+  take note obsessively. try to understand application logic
+  have a system for recon and a thorough documentation
+Fourth lesson: mindset
+  failure will inevitably happen. used it to learn new things about the application 
+  and improve on the next target 
+Fifth lesson: community 
+  seeing what other found,what mistake they done, what trick they used 
+  dramatically increase improvement speed 
+Sixth lesson: scope creeping your own workflow
+  don't chase fancy bug while ignoring what actually matter 
+  focus on impact not novelty (or coolness)
+seventh lesson: reporting 
+  clarity matter. screenshot, step by step reproduction and concise explanation 
+eighth lesson: reflection 
+  after everything is done. review what work, what doesn't and what could be improve.
+
+skill to know
+  html,css,javascript for website 
+  any programming language to create custom tool 
+  regex for extracting and modify information 
+
+tips 
+  use a specialized tool instead of a general one 
+  master the OWASP top 10 list 
+  watch jason haddix bug hunter's methodology 
+  
+community
+  joining nahamsac and cyberflow community
+  watch nahamsac,cyberflow,bug bounty report explained 
+  reading infosec write-ups  
+
+learning path 
+  linux skill (overthewire bandit),networking (all the protocol), web(html,css,javascript)  for hacker 
+  reading bug bounty books while doing CTF 
+    tryHackMe, hackTheBox, port swigger web security, hackingHub, PentesterLab, webSecurity Academy
+    Vulnhub, OVWAD (OWASP vulnerable web applications directory)
+  do bug bounty program that don't give reward
+    bug bounty dork (no idea how to use this)
+  do real bug bounty 
+
+learning platform
+  damn vulnerable web app
+  OWASP juice shop 
+  google gruyere
+  damn vulnerable restaurant api 
+
+
+
+bug bounty platform
+  bugcrowd
+  hackerone
+  intigriti
+  github?
+
+website bug bounty program 
+  google VRP
+
+
+bug bounty methodology have 2 parts
+  recon 
+  application analysis

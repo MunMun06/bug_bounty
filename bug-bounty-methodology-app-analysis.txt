@@ -1,0 +1,13 @@
+dont only touch the surface 
+  made an account
+  use their api 
+  see how authentication works
+  use the upload and download function
+
+pre-manual testing and automation
+  tech profiling
+    find what software the target use and what version
+    webanalyze is the cli tool for this
+  finding CVE's and misconfigs
+    
+    
