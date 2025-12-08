@@ -9,5 +9,68 @@ pre-manual testing and automation
     find what software the target use and what version
     webanalyze is the cli tool for this
   finding CVE's and misconfigs
-    
-    
+    find framework login pages, default creds, anything related to non-custom code 
+    nuclei is the cli tool for this (no tool is comprehensive)
+      try find things that nobody found and create custom template
+        automatically pull new CVE's, vuln classes, writeups not in nuclei library
+      other tools include Gofingerprint Sn1per, Intrigue Core, Vulners, Jaeles Scanner, retire.js 
+  port scanning 
+    Naabu is the simple tool 
+    RustScan is 2x-10x faster than other tools 
+
+Content discovery
+  pay special attention to
+    framework and their config files (like endpoint and files that give DB config string)
+  list to feed into tool 
+    content-discovery-lists.png 
+    https://wordlists.assetnote.io/   for more search in the "Technology <=> Host Mapping"
+  feroxbuster is the tool for this (gobuster too)
+  Source2URL (tools)
+    to generate wordlists from OSS (ask for a demo for paid software or just paid)
+  Scavenger (burp's plugin)
+    create custom wordlists from word from the site 
+  getallurls (gau) and wordlistgen
+    create wordlist from what used to exist 
+    echo bugcrowd.com | gau | wordlistgen | sort -u 
+    waymore is the improved version of gau 
+  recursive
+    do a recursive bruteforce for 401 error
+      https://app.com/admin/  401
+      https://app.com/admin/dashboard/  401
+      https://app.com/admin/dashboard/members  200
+  mobile
+    if the mobile app use api from the main domain. its in scope 
+    APKleaks for android 
+  stay up to date 
+    target's newsletter, affiliate programs, googling conference talks
+    monitor the domain for code changes with changedetection.io 
+
+Application analysis 
+  Big questions
+    how does the app pass data 
+    how/where does the app talk about users 
+      UID,email,username,UUID    Cookies,API calls
+    does the site have multi-tenancy or user levels 
+      tool like authorize 
+    does the site have a unique threat model 
+      some custom or special attack vector
+    has there been past security research and vulns 
+      test the bug that is already tested and bypass the patch 
+      look up on bounty platform for past history
+    how does the app handle vulns classes 
+      XSS SSRF CSRF IDOR XXE Shell ++ SSTI code injection
+  spidering
+    find all endpoints and parameters
+    burpsuite or OWASP's ZAP is the tools 
+    hakrawler and Gospider are cli 
+  javascript
+    parsing javascript for endpoints
+      custom and sometimes framework ones too
+    xnLinkFinder is the tool 
+    use beautifier.io to undo minified or obfuscated js 
+  parameter analysis  
+    use gf (or gf pattern idk ) along with pattern files to find common parameter that are vulnerable to a specific vulns classes 
+    lists are in parameter-analysis-lists.png  
+  heat Mapping
+    spidey sense type shit 
+    in heat-map-mindmap.png
