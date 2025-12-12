@@ -38,7 +38,7 @@ community
 learning path 
   linux skill (overthewire bandit),networking (all the protocol), web(html,css,javascript)  for hacker 
   reading bug bounty books while doing CTF 
-    tryHackMe, hackTheBox, port swigger web security, hackingHub, PentesterLab, webSecurity Academy
+    tryHackMe, hackTheBox(CTF event), port swigger web security, hackingHub, PentesterLab(practice like leetcode), webSecurity Academy
     Vulnhub, OVWAD (OWASP vulnerable web applications directory)
   do bug bounty program that don't give reward
     bug bounty dork (no idea how to use this)
