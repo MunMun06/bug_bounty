@@ -1,0 +1,20 @@
+searching skill
+  search engine
+    shodan
+      search for internet-connected devices
+    Censys
+      search for internet-connected hosts
+    virustotal
+      i used this before
+    have i been pwned
+      find if an email address is in leaked database
+    CVE
+    exploit database  
+      find a working exploit for a vulnerable app 
+    github
+      tools related to CVE, and PoC
+    Microsoft documentation for command
+      (this is triggering me but window is very vulnerable)
+
+
+  
