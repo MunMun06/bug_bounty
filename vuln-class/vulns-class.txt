@@ -1,0 +1,15 @@
+code injection
+  sql,nosql,js
+XSS
+  cross site scripting
+CSRF
+  cross site request forgery
+SSRF
+  server site request forgery
+IDOR
+  insecure direct object refenece
+CORS
+  cross origin resource sharing
+web cache deception attack
+  identify the endpoint, identify rule discrepancy between cache and origin server, craft a malicious URL 
+  likely making cache store a dynamic response then retrieve it  

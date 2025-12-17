@@ -1,0 +1,34 @@
+cache is always the middle man between user and web server
+
+cache key
+  to check if a content is cached, the cache create a cache key from the HTTP request
+  if the incoming cache key matches the PREVIOUS request, its consider equivalent and serve the cached content
+  cache key always include URL and query parameters, sometimes header and content type. 
+  
+cache rule
+  file extension, directory, file name, custom (like URL parameters or dynamic analysis)
+
+creating a web cache deception attack (using burp)
+  1.identify endpoint that return dynamic response (GET,HEAD,OPTIONS)
+  2.identify discrepancy between how cache and origin parse URL (map URL to content,process delimiter,normalize path)
+  3.craft a malicious URL to trick cache into storing dynamic response
+  4.after the victim access the URL, send request to the same URL to retrieve victim's response
+
+cache buster (burp's param miner)
+  when testing for discrepancy, dont make the URL have the same cache key
+  use some automated tools for this
+
+detecting cached responses 
+  header 
+    X-cache
+      hit 
+      miss 
+      dynamic. content is dynamic, normally means its not suitable for caching 
+      refresh. cached content is outdated
+    Cache-Control
+      may include directive that indicates caching.
+      like public with max-age more than 0 (means the content is cacheable)
+  response time 
+
+
+
