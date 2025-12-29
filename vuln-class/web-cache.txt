@@ -10,9 +10,20 @@ cache rule
 
 creating a web cache deception attack (using burp)
   1.identify endpoint that return dynamic response (GET,HEAD,OPTIONS)
-  2.identify discrepancy between how cache and origin parse URL (map URL to content,process delimiter,normalize path)
+  2.identify discrepancy between cache's and origin's cache rule (map URL to content,process delimiter,normalize path)
   3.craft a malicious URL to trick cache into storing dynamic response
   4.after the victim access the URL, send request to the same URL to retrieve victim's response
+
+crafting the malicious URL 
+  ex. in the body section 
+    <script>document.location="https://YOUR-LAB-ID.web-security-academy.net/my-account/wcd.js"</script>
+  
+encoding and decoding 
+  normal characters to %xx (encoding)
+  %xx in URL to normal characters (decoding)
+
+  are done to distinguish between the actual characters and using it for other things 
+  ex.     . as an static extension or you want to type an actual . 
 
 cache buster (burp's param miner)
   when testing for discrepancy, dont make the URL have the same cache key
@@ -29,6 +40,124 @@ detecting cached responses
       may include directive that indicates caching.
       like public with max-age more than 0 (means the content is cacheable)
   response time 
+    fast = cached 
 
 
+exploiting static extension cache rule
+  cache rule often target static resource by matching .css or .js
+  an attack may use a request for dynamic resource with static extension that's ignored by origin but not cache
 
+path mapping discrepancies 
+  2 common style. traditional and RESTful.
+  http://example.com/path/in/filesystem/resource.html  is traditional
+    /path/in/filesystem/  is the path in the server's file system
+    resource.html   is the file being accessed
+
+    http://example.com/path/resource/param1/param2
+    /path/resource/     is an endpoint representing resource
+    param1 and 2    are path parameters used by the server to process request
+
+  checking origin
+    add anything to the end of the path 
+      /api/orders/123/foo  still return order information just like /api/orders/123
+      then this mean origin ignores the added segment
+  checking cache
+    add extension to attempt to match the cache rule (.js .css .ico .exe  etc)
+      /api/orders/123/foo -> /api/orders/123/foo.js  
+      if the response is cached. this mean, cache interprets the full URL path and 
+        there a cache rule for storing .js response
+
+  ex. 
+    https://YOUR-LAB-ID.web-security-academy.net/my-account/wcd.js
+  
+delimiter discrepancies
+  can often use this attack on many different endpoints 
+  delimiter specify boundaries between different elements in URL 
+  ; . %00 are example of delimiter 
+
+  some delimiter are processed by the victim's browser which cant be used in this attack 
+  { } < > # are example 
+  but if cache or server decodes these, 
+    an attack may be possible with an encoded version 
+    of the exploit 
+
+  checking origin
+    add anything to the target endpoint 
+      /settings/users/list -> /settings/users/listaaa 
+      if the response is the same as the original, try another endpoint 
+    add a possible delimiter (test all ASCII characters)
+      /settings/users/list;aaa 
+      if the response is the same as the original  
+        this mean ; is used as delimiter and 
+        origin think the path is /settings/users/list 
+  checking cache 
+    add static extension (test all common one) and see if the response is cached 
+      make sure burp dont encode these delimiter characters
+    if its cached this mean cache doesnt use the delimiter and
+      there a cache rule for the static extension
+    
+  ex.
+    https://YOUR-LAB-ID.web-security-academy.net/my-account;aaa.ico 
+
+delimiter decoding discrepancies
+  similar to delimiter discrepancies 
+    but exclusively use %xx 
+    test encoded non-printable characters as well 
+      if they are decoded the URL will be truncated  
+      %00 %0A %09 and more 
+  %23 = # which truncate the URL path  
+  some cache decode before sending it to origin 
+  some cache apply the cache rule then decode and send to origin 
+  
+exploiting static directory cache rules 
+  It's common practice for web servers to store static resources in specific directories.
+  Cache rules often target these directories by matching specific URL path prefixes, like /static, /assets, /scripts, or /images. 
+  These rules can also be vulnerable to web cache deception. 
+  To exploit static directory cache rules, you'll need to understand the basics of path traversal attacks.
+  For more information, see our Path traversal Academy topic. 
+
+normalization discrepancies
+  normalization is the process of converting various representations of URL path
+    into a standardized format. include decoding characters and resolving dot-segments 
+  in an attack, each dot-segment needs to be encoded and 
+    special characters need to be decoded by cache or origin 
+
+  checking origin 
+    add any directory at the start of the path to non-cacheable resource 
+      /profile -> /aaa/..%2fprofile 
+    if the response match the original, this mean the path is interprets as /profile 
+      origin decodes the slash and resolves the dot-segment 
+    when testing, start by encoding only the second slash in the dot-segment
+    can also try encoding the full path, encoding a dot instead of slash.
+  checking cache 
+    1.identify potential static directories
+      look for request with common static directory prefixes and cached responses
+      set HTTP history filter to show 2xx responses, scripts, images, CSS MIME type
+    2.find the request with cached response 
+    3.have 2 option 
+      resend the request with path and an arbitrary prefix directory 
+        /assets/js/stockCheck.js -> /aaa/..%2fassets/js/stockCheck.js
+        no cached, cache isnt normalizing path but there is a cache rule based on /assets prefix 
+        cached, may indicate that cache has normalized the path to /assets/js/stockCheck.js 
+
+      or add a path after directory prefix
+        /assets/js/stockCheck.js -> /assets/..%2fjs/stockCheck.js
+        no cached, path normalized and there is a cache rule based on /assets prefix 
+        cached, may indicate cache not normalize and interpret the path as /assets/..%fjs/stockCheck.js 
+
+      in both case, the responses might be cached due to another cache rule 
+        to confirm that the cache is based on static directory
+        add an arbitrary string after the directory prefix 
+        /assets -> /assets/aaa 
+          still cached, cache rule is based on /assets prefix 
+          not cached, inconclusive 
+        its possible to not know if the cache resolve dot-segment and decodes URL path 
+          without attempting an exploit
+
+  exploiting normalization by origin 
+    if origin resolves encoded dot-segment but not cache, this template might be viable 
+      /<static-directory-prefix>/..%2f<dynamic-path>
+    ex. /assets/..%2fprofile
+      origin interpret as /profile 
+      cache interpret as /assets/..%2fprofile 
+      origin return dynamic profile information

@@ -10,6 +10,7 @@ IDOR
   insecure direct object refenece
 CORS
   cross origin resource sharing
+  bypass to same origin policy by explicit permission from the server
 web cache deception attack
   identify the endpoint, identify rule discrepancy between cache and origin server, craft a malicious URL 
   likely making cache store a dynamic response then retrieve it  
