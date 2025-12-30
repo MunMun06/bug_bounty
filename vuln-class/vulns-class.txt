@@ -10,7 +10,29 @@ IDOR
   insecure direct object refenece
 CORS
   cross origin resource sharing
-  bypass to same origin policy by explicit permission from the server
-web cache deception attack
+  bypass the same origin policy by explicit permission from the server
+web cache deception attack (web cache poisoning)
   identify the endpoint, identify rule discrepancy between cache and origin server, craft a malicious URL 
   likely making cache store a dynamic response then retrieve it  
+
+look at burp issue definition for more info 
+
+juicy target 
+  SQL injection 
+  file path traversal 
+  HTTP put method is enabled 
+  file path manipulation
+  server-side javascript code injection 
+  cross-site scripting
+  web cache poisoning
+  javascript injection
+  websocket URL poisoning
+  OS command injection 
+
+  code injection in general 
+
+  HTTP request smuggling 
+  HTTP response header injection
+  local file path manipulation
+
+seem like 12 learning path in portSwigger are interesting out of 17

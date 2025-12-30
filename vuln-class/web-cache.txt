@@ -155,9 +155,47 @@ normalization discrepancies
           without attempting an exploit
 
   exploiting normalization by origin 
+    delimiter help with exploiting normalization
     if origin resolves encoded dot-segment but not cache, this template might be viable 
       /<static-directory-prefix>/..%2f<dynamic-path>
     ex. /assets/..%2fprofile
       origin interpret as /profile 
       cache interpret as /assets/..%2fprofile 
       origin return dynamic profile information
+    ex. /resources/..%2fmy-account
+
+  exploiting normalization by cache 
+    if cache resolve encoded dot-segment but not origin, this template might be viable 
+      /<dynamic-path>%2f%2e%2e%2f<static-directory-prefix>
+    when exploiting the cache, encode all characters in the path 
+    usually, path traversal alone is not enough. you need delimiter that is used by 
+      origin but not cache
+    ex. /profile;%2f%2e%2e%2fstatic
+      origin interpret as /profile
+      cache interpret as /static
+      origin return dynamic profile information that is stored in cache 
+    ex. /my-account%23%2f%2e%2e%2fresources
+
+exploiting file name cache rules 
+  only works if cache normalize the path but not origin
+  identify file name cache rules by sending GET request for possible file and see if its cached 
+  robots.txt,index.html,favicon.ico
+
+  normalization discrepancies
+    test how origin normalize URL path with the same method as for 
+      static directory cache rules 
+    send path traversal with an arbitrary directory before the file name 
+      ex. /profile%2f%2e%2e%2findex.html
+        cached, cache normalize the path to /index.html
+        not cached, cache dont decode slash and resolve dot-segment
+
+  replace the static directory prefix with the file name
+
+preventing web cache deception 
+    Always use Cache-Control headers to mark dynamic resources, set with the directives no-store and private.
+    Configure your CDN settings so that your caching rules don't override the Cache-Control header.
+    Activate any protection that your CDN has against web cache deception attacks. 
+      Many CDNs enable you to set a cache rule that verifies that the response Content-Type matches the request's URL file extension. 
+      For example, Cloudflare's Cache Deception Armor.
+    Verify that there aren't any discrepancies between how the origin server and the cache interpret URL paths.
+
