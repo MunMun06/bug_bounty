@@ -1,38 +1,65 @@
-code injection
+code injection (high)
   sql,nosql,js
-XSS
+XSS (high)
   cross site scripting
-CSRF
+CSRF (medium)
   cross site request forgery
-SSRF
-  server site request forgery
+SSRF 
+  server side request forgery
 IDOR
-  insecure direct object refenece
+  insecure direct object reference 
 CORS
   cross origin resource sharing
   bypass the same origin policy by explicit permission from the server
-web cache deception attack (web cache poisoning)
+web cache deception attack (medium)
   identify the endpoint, identify rule discrepancy between cache and origin server, craft a malicious URL 
   likely making cache store a dynamic response then retrieve it  
 
 look at burp issue definition for more info 
 
 juicy target 
-  SQL injection 
-  file path traversal 
-  HTTP put method is enabled 
-  file path manipulation
-  server-side javascript code injection 
-  cross-site scripting
-  web cache poisoning
-  javascript injection
-  websocket URL poisoning
-  OS command injection 
+  SQL injection (high and its variants)
+    sql injection
+    sql injection second order
+    client-side sql injection DOM-based
+    client-side sql injection reflected DOM-based
+    client-side sql injection stored DOM-based
+  file path traversal (high)
+  HTTP put method is enabled (high) (no) 
+  file path manipulation (high)
+  server-side javascript code injection (high) 
+  cross-site scripting (high and its variants)
+    cross-site scripting stored 
+    cross-site scripting reflected 
+    cross-site scripting DOM-based
+    cross-site scripting reflected DOM-based
+    cross-site scripting stored DOM-based
+  web cache poisoning (high) (no)
+  javascript injection (high and its variants) (it just XSS)
+    javascript injection DOM-based
+    javascript injection reflected DOM-based
+    javascript injection stored DOM-based
+  websocket URL poisoning (high and its variants)
+    websocket URL poisoning DOM-based
+    websocket URL poisoning reflected DOM-based
+    websocket URL poisoning stored DOM-based
+  OS command injection (high)
+
+  HTTP request smuggling (high)
+  HTTP response header injection (high)
+  local file path manipulation (high and its variants)
+    local file path manipulation DOM-based
+    local file path manipulation reflected DOM-based
+    local file path manipulation stored DOM-based
 
   code injection in general 
 
-  HTTP request smuggling 
-  HTTP response header injection
-  local file path manipulation
-
 seem like 12 learning path in portSwigger are interesting out of 17
+
+logic error 
+  IDOR 
+  broken access control 
+    BOLA
+  Mass assignment
+  authentication bypass 
+
